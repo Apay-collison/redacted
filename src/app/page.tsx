@@ -1,12 +1,14 @@
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+"use client";
+
+import { AccountInfo } from "@/components/AccountInfo";
+import { Header } from "@/components/Header";
+import { MessageBoard } from "@/components/MessageBoard";
+import { NetworkInfo } from "@/components/NetworkInfo";
+import { TransferAPT } from "@/components/TransferAPT";
+import { WalletDetails } from "@/components/WalletDetails";
 // Internal Components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Header } from "@/components/Header";
-import { WalletDetails } from "@/components/WalletDetails";
-import { NetworkInfo } from "@/components/NetworkInfo";
-import { AccountInfo } from "@/components/AccountInfo";
-import { TransferAPT } from "@/components/TransferAPT";
-import { MessageBoard } from "@/components/MessageBoard";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 function App() {
   const { connected } = useWallet();

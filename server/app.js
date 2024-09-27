@@ -1,4 +1,6 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import mongoose from "mongoose";
 import { InteractionType, InteractionResponseType, MessageComponentTypes } from "discord-interactions";
@@ -72,7 +74,7 @@ sendLinkChangeStream.on("change", async (change) => {
       `You sent ${sendLink.amount} APTOS to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
     );
   }
-});
+}); 
 
 client.login(process.env.VITE_DISCORD_TOKEN);
 
@@ -323,7 +325,7 @@ app.post("/interactions", async (req, res) => {
                 new ButtonBuilder()
                   .setLabel("Connect 🔁")
                   .setStyle(ButtonStyle.Link)
-                  .setURL(`https://apay-aptos-web.vercel.app/connect/${sessionId}`),
+                  .setURL(`http://localhost:3000/connect/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -374,7 +376,7 @@ app.post("/interactions", async (req, res) => {
         new ButtonBuilder()
           .setLabel("Connect 🔁")
           .setStyle(ButtonStyle.Link)
-          .setURL(`https://apay-aptos-web.vercel.app/create/${sessionId}`),
+          .setURL(`http://localhost:3000/create/${sessionId}`),
       ];
 
       // 将按钮分配到 ActionRow 中
@@ -598,7 +600,7 @@ app.post("/interactions", async (req, res) => {
                 new ButtonBuilder()
                   .setLabel("Send 💸")
                   .setStyle(ButtonStyle.Link)
-                  .setURL(`https://apay-aptos-web.vercel.app/send/${sessionId}`),
+                  .setURL(`http://localhost:3000/send/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -686,7 +688,7 @@ app.post("/interactions", async (req, res) => {
               new ButtonBuilder()
                 .setLabel("Vote ✅")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`https://apay-aptos-web.vercel.app/vote/${sessionId}`),
+                .setURL(`http://localhost:3000/vote/${sessionId}`),
             ),
           ],
           flags: 64,
@@ -719,7 +721,7 @@ app.post("/interactions", async (req, res) => {
               new ButtonBuilder()
                 .setLabel("Tally 💸")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`https://apay-aptos-web.vercel.app/tally/${sessionId}`),
+                .setURL(`http://localhost:3000/tally/${sessionId}`),
             ),
           ],
           flags: 64,

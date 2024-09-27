@@ -1,4 +1,4 @@
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
+import type { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
 
 export type TransferAPTArguments = {
   to: string; // the account address to transfer the APT to

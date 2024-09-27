@@ -8,17 +8,16 @@ To get started with the Boilerplate template and learn more about the template f
 
 ## The Boilerplate template provides:
 
-- **Folder structure** - A pre-made dapp folder structure with a `frontend` and `contract` folders.
+- **Folder structure** - A pre-made dapp folder structure with a `src` (frontend) and `contract` folders.
 - **Dapp infrastructure** - All required dependencies a dapp needs to start building on the Aptos network.
 - **Wallet Info implementation** - Pre-made `WalletInfo` components to demonstrate how one can use to read a connected Wallet info.
-- **Trasnfer APT implementation** - Pre-made `transfer` components to send APT to an address.
+- **Transfer APT implementation** - Pre-made `transfer` components to send APT to an address.
 - **Message board functionality implementation** - Pre-made `message` components to send and read a message on chain
 
 
 ## What tools the template uses?
 
 - React framework
-- Vite development tool
 - shadcn/ui + tailwind for styling
 - Aptos TS SDK
 - Aptos Wallet Adapter
@@ -34,6 +33,7 @@ Some commands are built-in the template and can be ran as a npm script, for exam
 - `npm run move:test` - a command to run Move unit tests
 - `npm run move:compile` - a command to compile the Move contract
 - `npm run move:upgrade` - a command to upgrade the Move contract
+- `npm run dev` - a command to run the frontend locally
 - `npm run deploy` - a command to deploy the dapp to Vercel
 
 For all other available CLI commands, can run `npx aptos` and see a list of all available commands.
