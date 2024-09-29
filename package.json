@@ -28,12 +28,15 @@
     "@tanstack/react-query": "^5.51.23",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "@types/mongoose": "^5.11.97",
+    "mongoose": "^8.5.2",
     "lucide-react": "^0.383.0",
     "next": "^14.2.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "tailwind-merge": "^2.3.0",
+    "zod": "^3.23.8",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {

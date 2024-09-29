@@ -4,7 +4,7 @@ dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import { InteractionType, InteractionResponseType, MessageComponentTypes } from "discord-interactions";
-import { VerifyDiscordRequest, getRandomEmoji, sendFaucetETH } from "./utils.js";
+import { VerifyDiscordRequest, getRandomEmoji, sendFaucetToken } from "./utils.js";
 import subscribersRouter from "./routes/subscribers.js";
 import userlink from "./models/userlink.js";
 import userlinksRouter from "./routes/userlinks.js";
@@ -325,7 +325,7 @@ app.post("/interactions", async (req, res) => {
                 new ButtonBuilder()
                   .setLabel("Connect 🔁")
                   .setStyle(ButtonStyle.Link)
-                  .setURL(`http://localhost:3000/connect/${sessionId}`),
+                  .setURL(`http://localhost:3001/connect/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -376,7 +376,7 @@ app.post("/interactions", async (req, res) => {
         new ButtonBuilder()
           .setLabel("Connect 🔁")
           .setStyle(ButtonStyle.Link)
-          .setURL(`http://localhost:3000/create/${sessionId}`),
+          .setURL(`http://localhost:3001/create/${sessionId}`),
       ];
 
       // 将按钮分配到 ActionRow 中
@@ -518,7 +518,7 @@ app.post("/interactions", async (req, res) => {
         },
       });
     }
-
+  
     if (name === "send") {
       const amount = options.find((option) => option.name === "amount")?.value;
       const to_address = options.find((option) => option.name === "to_address")?.value;
@@ -534,7 +534,7 @@ app.post("/interactions", async (req, res) => {
       }
 
       try {
-        // Handle if to_address is a user mention or an Ethereum address
+        // Handle if to_address is a user mention or an address
         let recipientAddress = to_address;
         if (to_address.startsWith("<@")) {
           // Extract user ID from the mention
@@ -600,7 +600,7 @@ app.post("/interactions", async (req, res) => {
                 new ButtonBuilder()
                   .setLabel("Send 💸")
                   .setStyle(ButtonStyle.Link)
-                  .setURL(`http://localhost:3000/send/${sessionId}`),
+                  .setURL(`http://localhost:3001/send/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -623,7 +623,7 @@ app.post("/interactions", async (req, res) => {
     const userId = member?.user?.id || user?.id;
 
     if (custom_id === "Testnet") {
-      return await sendFaucetETH(res, userId, "testnet");
+      return await sendFaucetToken(res, userId, "testnet");
     }
     if (custom_id === "vote_list") {
       // Get selected option from payload
@@ -688,7 +688,7 @@ app.post("/interactions", async (req, res) => {
               new ButtonBuilder()
                 .setLabel("Vote ✅")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`http://localhost:3000/vote/${sessionId}`),
+                .setURL(`http://localhost:3001/vote/${sessionId}`),
             ),
           ],
           flags: 64,
@@ -721,7 +721,7 @@ app.post("/interactions", async (req, res) => {
               new ButtonBuilder()
                 .setLabel("Tally 💸")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`http://localhost:3000/tally/${sessionId}`),
+                .setURL(`http://localhost:3001/tally/${sessionId}`),
             ),
           ],
           flags: 64,

@@ -56,7 +56,7 @@ export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export async function sendFaucetETH(res, userId, network) {
+export async function sendFaucetToken(res, userId, network) {
   let userLink = await userlink.findOne({ user: userId }).sort({ generateTIME: -1 });
   // Find the most recent valid address
   while (userLink && userLink.address === "0x") {
@@ -76,7 +76,7 @@ export async function sendFaucetETH(res, userId, network) {
   }
 
   const recipientAddress = userLink.address;
-  const amountToSend = "1000000000000000"; // 0.001 ETH in Wei
+  const amountToSend = "1000000000000000"; 
 
   // Load wallet from private key in .env
   const provider = new ethers.JsonRpcProvider(NETWORKS[network].url);
