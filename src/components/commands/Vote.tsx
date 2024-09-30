@@ -98,7 +98,7 @@ export const Vote = ({ params }: { params: { slug: string } }) => {
             const body = {
                 autolink: `${params.slug}`,
                 transactionHash: res.hash,
-                network: "OP Sepolia",
+                network: "Testnet",
                 voteId: voteId?.toString(),
             };
 
