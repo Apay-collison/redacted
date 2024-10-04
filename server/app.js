@@ -15,7 +15,7 @@ import tallylink from "./models/tallylink.js";
 import {
   ButtonBuilder,
   ButtonStyle,
-  ActionRowBuilder,
+  ActionRowBuilder,   
   Client,
   GatewayIntentBits,
   REST,
@@ -25,9 +25,10 @@ import {
 import { NETWORKS } from "./network.js";
 import { ethers } from "ethers";
 import { abi } from "./abi.js";
+import { AptosConfig, Aptos } from "@aptos-labs/ts-sdk";
 
 const app = express();
-const PORT = process.env.VITE_PORT || 3000;
+const PORT = process.env.VITE_PORT || 3001;
 
 const client = new Client({
   intents: [
@@ -38,7 +39,7 @@ const client = new Client({
     GatewayIntentBits.GuildIntegrations,
   ],
 });
-
+ 
 const sendLinkChangeStream = sendlink.watch([{ $match: { operationType: "update" } }]);
 sendLinkChangeStream.on("change", async (change) => {
   if (change.ns.coll === "sendlinks" && change.operationType === "update") {
@@ -62,7 +63,7 @@ sendLinkChangeStream.on("change", async (change) => {
       if (NETWORKS[n].name === sendLink.network) {
         explorerLink = `${NETWORKS[n].explorer}/txn/${sendLink.transactionHash}?network=testnet`;
       }
-    }
+    } 
     if (userLink !== null) {
       const receiver = await client.users.fetch(userLink.user);
       await receiver.send(
@@ -74,7 +75,7 @@ sendLinkChangeStream.on("change", async (change) => {
       `You sent ${sendLink.amount} APTOS to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
     );
   }
-}); 
+});    
 
 client.login(process.env.VITE_DISCORD_TOKEN);
 
@@ -106,13 +107,14 @@ app.post("/interactions", async (req, res) => {
     const userId = member?.user?.id || user?.id;
 
     if (name === "test") {
+      console.log('dance dance');
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           content: "hello world " + getRandomEmoji(),
           flags: 64,
         },
-      });
+      });   
     }
 
     if (name === "check") {
@@ -325,7 +327,7 @@ app.post("/interactions", async (req, res) => {
                 new ButtonBuilder()
                   .setLabel("Connect 🔁")
                   .setStyle(ButtonStyle.Link)
-                  .setURL(`http://localhost:3001/connect/${sessionId}`),
+                  .setURL(`http://localhost:3000/connect/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -370,13 +372,15 @@ app.post("/interactions", async (req, res) => {
         topic: topic,
       });
 
+      console.log(newcreateLink);
+
       await newcreateLink.save();
 
       const buttons = [
         new ButtonBuilder()
           .setLabel("Connect 🔁")
           .setStyle(ButtonStyle.Link)
-          .setURL(`http://localhost:3001/create/${sessionId}`),
+          .setURL(`http://localhost:3000/create/${sessionId}`),
       ];
 
       // 将按钮分配到 ActionRow 中
@@ -394,13 +398,16 @@ app.post("/interactions", async (req, res) => {
     }
 
     if (name === "vote") {
+     
       const validVoteLists = await createlink.find({
         topic: { $ne: null },
-        transactionHash: { $ne: null },
-        network: { $ne: null },
-        voteId: { $ne: null },
+        // transactionHash: { $ne: null },
+        // network: { $ne: null },
+        // voteId: { $ne: null },
         finished: { $ne: true },
       });
+            console.log(createlink);
+
       const options = [];
       for (let i = 0; i < validVoteLists.length; i++) {
         options.push({
@@ -409,6 +416,8 @@ app.post("/interactions", async (req, res) => {
           description: `created by <@${userId}>`,
         });
       }
+
+      
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -425,7 +434,7 @@ app.post("/interactions", async (req, res) => {
                   // Select options - see https://discord.com/developers/docs/interactions/message-components#select-menu-object-select-option-structure
                   options: options,
                 },
-              ],
+              ], 
             },
           ],
           flags: 64,
@@ -437,9 +446,9 @@ app.post("/interactions", async (req, res) => {
       const validVoteLists = await createlink.find({
         user: userId,
         topic: { $ne: null },
-        transactionHash: { $ne: null },
-        network: { $ne: null },
-        voteId: { $ne: null },
+        // transactionHash: { $ne: null },
+        // network: { $ne: null },
+        // voteId: { $ne: null },
         finished: { $ne: true },
       });
       const options = [];
@@ -462,7 +471,7 @@ app.post("/interactions", async (req, res) => {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: "Choose a topic you want to finish voting:",
+          content: "Choose a topic you want to declare winner:",
           // Selects are inside of action rows
           components: [
             {
@@ -481,12 +490,15 @@ app.post("/interactions", async (req, res) => {
           flags: 64,
         },
       });
-    }
-
+    } 
+  
     if (name === "result") {
+      console.log('result pressed')
       const validVoteLists = await createlink.find({
-        finished: true,
+        // finished: true,
+        topic: { $ne: null },
       });
+      console.log(validVoteLists);
       const options = [];
       for (let i = 0; i < validVoteLists.length; i++) {
         options.push({
@@ -518,7 +530,7 @@ app.post("/interactions", async (req, res) => {
         },
       });
     }
-  
+
     if (name === "send") {
       const amount = options.find((option) => option.name === "amount")?.value;
       const to_address = options.find((option) => option.name === "to_address")?.value;
@@ -597,10 +609,7 @@ app.post("/interactions", async (req, res) => {
             content: `${amount} APTOS to ${recipientAddress}`,
             components: [
               new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setLabel("Send 💸")
-                  .setStyle(ButtonStyle.Link)
-                  .setURL(`http://localhost:3001/send/${sessionId}`),
+                new ButtonBuilder().setLabel("Send 💸").setStyle(ButtonStyle.Link).setURL(`http:///send/${sessionId}`),
               ),
             ],
             flags: 64,
@@ -629,6 +638,7 @@ app.post("/interactions", async (req, res) => {
       // Get selected option from payload
       const selectedOption = data.values[0];
       const voteId = selectedOption.replace("votelist_", "");
+     
       const vote = await createlink.findById(voteId);
       const options = [];
       for (let i = 0; i < vote.option.length; i++) {
@@ -636,8 +646,9 @@ app.post("/interactions", async (req, res) => {
           label: vote.option[i],
           value: `option_${i}`,
         });
-      }
-      const userId = req.body.member.user.id;
+      }  
+      
+      const userId = req.body.user.id || req.body.member.user.id;
 
       // Send results
       return res.send({
@@ -664,19 +675,23 @@ app.post("/interactions", async (req, res) => {
     }
     if (custom_id.startsWith("vote_option_")) {
       const voteId = custom_id.replace("vote_option_", "");
+     
       const selectedOption = data.values[0];
       const optionId = selectedOption.replace("option_", "");
+     
       const vote = await createlink.findById(voteId);
+    
       const timestamp = new Date();
       const sessionId = Math.random().toString(36).substring(2, 15);
       // TODO: get voteID from vote
       const onchainVoteId = vote.voteId;
+      console.log(onchainVoteId)
       const newVoteLink = new votelink({
         user: userId,
-        votelink: sessionId,
+        votelink: sessionId, 
         generateTIME: timestamp,
         choice: optionId,
-        voteId: onchainVoteId,
+        voteId: voteId,
       });
       await newVoteLink.save();
       return res.send({
@@ -688,7 +703,7 @@ app.post("/interactions", async (req, res) => {
               new ButtonBuilder()
                 .setLabel("Vote ✅")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`http://localhost:3001/vote/${sessionId}`),
+                .setURL(`http://localhost:3000/vote/${sessionId}`),
             ),
           ],
           flags: 64,
@@ -715,13 +730,13 @@ app.post("/interactions", async (req, res) => {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Connecting wallet to finish voting:`,
+          content: `Connect wallet to declare winner:`,
           components: [
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setLabel("Tally 💸")
                 .setStyle(ButtonStyle.Link)
-                .setURL(`http://localhost:3001/tally/${sessionId}`),
+                .setURL(`http://localhost:3000/tally/${sessionId}`),
             ),
           ],
           flags: 64,
@@ -733,29 +748,25 @@ app.post("/interactions", async (req, res) => {
       const selectedOption = data.values[0];
       const voteId = selectedOption.replace("resultlist_", "");
       const vote = await createlink.findById(voteId);
-      const onchainVoteId = vote.voteId;
+      const onchainVoteId = voteId;
+      const VOTING_MODULE_ADDRESS = "0x050f57325ca7db645579a690faddd09558abce46ad70faceb0b9c69f6a2066f7";
+      const account = "0xf9424969a5cfeb4639c4c75c2cd0ca62620ec624f4f28d76c4881a1e567d753f";
 
-      const network = "testnet";
-      const provider = new ethers.JsonRpcProvider(NETWORKS[network].url);
-      const address = "0xF4205f466De67CA37d820504eb3c81bb89081214";
-      const contract = new ethers.Contract(address, abi, provider);
-      const filter = contract.filters.Result(onchainVoteId);
-      const events = await contract.queryFilter(filter);
+      const aptosConfig = new AptosConfig({ network: "testnet" });
+      const aptos = new Aptos(aptosConfig);
 
-      const results = events[0].args[1];
-      const maxIndex = results.reduce((maxIdx, currentValue, currentIndex, array) => {
-        return currentValue > array[maxIdx] ? currentIndex : maxIdx;
-      }, 0);
-
-      const voteSchema = await createlink.findOne({
-        voteId: onchainVoteId,
-      });
-
+      const payload = {
+        function: `${VOTING_MODULE_ADDRESS}::Voting::view_winner`,
+        functionArguments: [account],
+      };
+  
+      const chainId = (await aptos.view({ payload }));
+ 
       // Send results
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `The winner of the vote: ${voteSchema.option[maxIndex]}`,
+          content: `The winner of the vote: ${chainId}`,
           flags: 64,
         },
       });

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { autolink, transactionHash, network, voteId } = body;
+    const { autolink, transactionHash, network, finished, voteId } = body;
     try {
         await dbConnect();
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
         await createlink.updateOne(
             { voteId: voteId },
-            { finished: true }
+            { finished: finished }
         );
 
         return Response.json(JSON.stringify(res));

@@ -1,9 +1,8 @@
 "use client";
 
-import { LogInCard } from "../../../components/login-card";
-import { Tally } from "../../../components/Tally";
-import { LoadingSpinner } from "../../../components/ui/loading-spinner";
-import { useSignerStatus } from "@alchemy/aa-alchemy/react";
+import { Tally } from "@/components/commands/Tally";
+// import { LogInCard } from "../../../components/login-card";
+
 
 // [!region using-status]
 export default function Home({ params }: { params: { slug: string } }) {
@@ -11,21 +10,15 @@ export default function Home({ params }: { params: { slug: string } }) {
     // loading - waiting for a request to resolve
     // connected - the user signed in with an email tied to a smart account
     // unconnected - we need to provide a login UI for the user to sign in
-    const { isInitializing, isAuthenticating, isConnected, status } =
-        useSignerStatus();
-    const isLoading =
-        isInitializing ||
-        (isAuthenticating && status !== "AWAITING_EMAIL_AUTH");
+    
+    
+    
 
     return (
         <main className="flex items-center justify-center min-h-screen text-white bg-gray-900">
-            {isLoading ? (
-                <LoadingSpinner />
-            ) : isConnected ? (
+            
                 <Tally params={params} />
-            ) : (
-                <LogInCard />
-            )}
+           
         </main>
     );
 }
