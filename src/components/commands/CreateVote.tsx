@@ -207,6 +207,12 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
               <h2 className="text-xl">{message}</h2>
             </div>
           )}
+
+          {currentScores && (
+            <div className="text-center text-gray-800 my-8">
+              <h2 className="text-base">✅ You may now close this window</h2>
+            </div>
+          )}
         </div>
 
         {!isInitialized && (

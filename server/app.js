@@ -387,7 +387,7 @@ app.post("/interactions", async (req, res) => {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Please connect:`,
+          content: `Connect wallet to create:`,
           components: [actionRow],
           flags: 64,
         },
@@ -435,7 +435,7 @@ app.post("/interactions", async (req, res) => {
           flags: 64,
         },
       });
-    }
+    }  
 
     if (name === "tally") {
       const validVoteLists = await createlink.find({
