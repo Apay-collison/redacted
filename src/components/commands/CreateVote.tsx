@@ -65,13 +65,13 @@ const VotingOptions: React.FC<VotingOptionsProps> = ({ options, currentScores })
   <div className="space-y-2">
     {currentScores
       ? currentScores[0].map((option, index) => (
-          <div key={index} className="bg-gray-100 p-3 rounded-md text-gray-800 flex justify-between">
+          <div key={index} className="bg-indigo-100 p-3 text-gray-800 flex justify-between">
             <span>{option}</span>
             <span className="font-bold">{currentScores[1][index]} votes</span>
           </div>
         ))
       : options.map((option, index) => (
-          <div key={index} className="bg-gray-100 p-3 rounded-md text-gray-800">
+          <div key={index} className="bg-indigo-100 p-3 text-gray-800">
             {option}
           </div>
         ))}
@@ -139,7 +139,7 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
       return;
     }
 
-     await checkInitialization();
+    await checkInitialization();
 
     setSending(true);
     setMessage("Creating vote...");
@@ -175,29 +175,25 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
   }, [fetchVotingOptions, checkInitialization, handleCreateVote]);
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden max-w-md mx-auto w-[350px]">
-      <img
-        src="https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"
-        alt="Voting Concept"
-        className="w-full h-auto object-cover"
-      />
+    <div className="overflow-y-auto max-w-lg mx-auto w-[400px]">
+      <img src={currentScores ? "/go.gif" : "https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"} alt="Voting Concept" className="w-full h-[150px] object-cover" />
 
       <div className="p-6 flex flex-col justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            {currentScores ? "Current Polls" : "Create New Vote"}
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {currentScores ? "Current Polls" : "Begin New Vote"}
           </h2>
 
           {!sending && (
             <>
               {!currentScores && (
-                <div className="mb-6">
+                <div className="mb-3 flex items-center justify-center space-x-1">
                   <Label className="text-lg font-semibold text-gray-700">Topic:</Label>
-                  <p className="mt-1 text-gray-800 text-base">{topic}</p>
+                  <p className=" text-gray-800 text-base">{topic}</p>
                 </div>
               )}
 
-              <div className="mb-2">
+              <div className="mb-3">
                 <Label className="text-sm font-semibold text-gray-700 mb-2 block">
                   {winner ? `Declared Winner: ${winner}` : "Voting Options:"}
                 </Label>
@@ -217,7 +213,7 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
           <Button
             onClick={handleCreateVote}
             disabled={options.length < 2 || sending}
-            className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-md w-full transition duration-200 ease-in-out transform hover:scale-105"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-sm w-full transition duration-200 ease-in-out transform hover:scale-105"
           >
             {sending ? "Creating Vote..." : "Create Vote"}
           </Button>

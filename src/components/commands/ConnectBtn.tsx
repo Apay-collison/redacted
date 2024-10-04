@@ -1,61 +1,75 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { WalletSelector } from "../WalletSelector";
 
-export default function ConnectBtn({ params }: { params: { slug: string } }) {
+export default function ConnectBtn({
+  params,
+  onConnectWallet,
+  onWalletConnected,
+  onCompleteSignIn,
+}: {
+  params: { slug: string };
+  onConnectWallet: () => void;
+  onWalletConnected: () => void;
+  onCompleteSignIn: (isSuccess: boolean, errorMsg?: string) => void;
+}) {
   const { account, connected, signMessageAndVerify } = useWallet();
   const [signature, setSignature] = useState(false);
-  const [message, setMessage] = useState("");
 
   async function sign() {
-    setMessage("Loading...");
+    onConnectWallet();
     const message = `session ID: ${params.slug}`;
-    const data = await signMessageAndVerify({ message: message, nonce: "" });
-    setSignature(data);
 
-    console.log(data);
-
-    const body = {
-      message: message,
-      signature: data,
-      autolink: `${params.slug}`,
-      address: account?.address,
-    };
     try {
+      const data = await signMessageAndVerify({ message, nonce: "" });
+
+      const body = {
+        message: message,
+        signature: data,
+        autolink: `${params.slug}`,
+        address: account?.address,
+      };
       const response = await fetch("/api/connect", {
-        method: "POST", // Specify the request method
+        method: "POST",
         headers: {
-          "Content-Type": "application/json", // Set the Content-Type header
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body), // Convert the data to a JSON string
+        body: JSON.stringify(body),
       });
+
       if (response.ok) {
-        setMessage("✅\nYou may now close the window");
+        onCompleteSignIn(true);
+        setSignature(data);
       } else {
         const json = await response.json();
-        setMessage(`❌\nAn error occurred ${json.error}`);
+        onCompleteSignIn(false, json.error);
       }
     } catch (error) {
-      setMessage(`❌\nAn error occurred ${error}`);
+      onCompleteSignIn(false, "failed to sign in");
     }
   }
 
+  useEffect(() => {
+    connected && onWalletConnected();
+  }, [account?.address]);
+
   return (
     <>
-      {!signature && <WalletSelector />}
-      {connected && !signature && (
-        <button
-          className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
-          onClick={sign}
-        >
-          Sign message
-        </button>
-      )}
+      <div className="flex space-x-3">
+        {!signature && !connected && <WalletSelector />}
+        {connected && !signature && (
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+            onClick={sign}
+          >
+            Complete Sign In
+          </button>
+        )}
+      </div>
+
       {signature && (
-        <>
-          <h2 className="text-white">{message}</h2>
-        </>
+        <h2 className="text-black">{signature ? "✅ You may now close the window" : "Waiting for signature..."}</h2>
       )}
     </>
   );

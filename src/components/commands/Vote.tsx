@@ -1,15 +1,12 @@
 "use client";
 
-import { OpStatus } from "./op-status";
-//
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { toast } from "@/components/ui/use-toast";
 import { VOTING_MODULE_ADDRESS } from "@/constants";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { aptosClient } from "@/utils/aptosClient";
 import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
+import { WalletSelector } from "../WalletSelector";
+import { Button } from "../ui/button";
 
 // Helper functions
 const createTransactionPayload = (functionName: string, args: any[]): InputTransactionData => ({
@@ -21,7 +18,7 @@ const createTransactionPayload = (functionName: string, args: any[]): InputTrans
 
 type Scores = [string[], number[]];
 
-const fetchScores = async (account: string ): Promise<Scores | null> => {
+const fetchScores = async (account: string): Promise<Scores | null> => {
   if (!account) return null;
   try {
     const result = await aptosClient().view<Scores>({
@@ -37,18 +34,23 @@ const fetchScores = async (account: string ): Promise<Scores | null> => {
   }
 };
 
-export const Vote = ({ params }: { params: { slug: string } }) => {
-  const { account, signAndSubmitTransaction } = useWallet();
+export const Vote = ({
+  params,
+  onWalletConnected,
+  onCompleteSignIn,
+}: {
+  params: { slug: string };
+  onWalletConnected: () => void;
+  onCompleteSignIn: (isSuccess: boolean, errorMsg?: string) => void;
+}) => {
+  const { account, signAndSubmitTransaction, connected } = useWallet();
   const [sending, setSending] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
-    const [topic, setTopic] = useState<string>("");
-    const [creatorAddr, setCreatorAddr] = useState<string>("");
-  // const [options, setOptions] = useState<string>("");
-
+  const [creatorAddr, setCreatorAddr] = useState<string>("");
 
   function formatAddress(address: any) {
     if (!address || address.length < 10) {
-      return address; // Return the full address if it's too short
+      return address;
     }
     const firstPart = address.slice(0, 4);
     const lastPart = address.slice(-6);
@@ -58,20 +60,17 @@ export const Vote = ({ params }: { params: { slug: string } }) => {
   async function send() {
     setSending(true);
     setMessage("Loading...");
-    // collect all the form values from the user input
-    // const creatorAddr = "0xf9424969a5cfeb4639c4c75c2cd0ca62620ec624f4f28d76c4881a1e567d753f";
+
     try {
       const response = await fetch(`/api/vote?autolink=${params.slug}`, {
-        method: "GET", // Specify the request method
+        method: "GET",
       });
       const json = await response.json();
       const choice = JSON.parse(json).choice;
       const voteId = JSON.parse(json).voteId;
 
-    //   console.log(json);
-    //   console.log(account);
-        const options = await fetchScores(creatorAddr);
-        const selectedOption = options && options[0][choice]
+      const options = await fetchScores(creatorAddr);
+      const selectedOption = options && options[0][choice];
 
       console.log("Voting Information:", {
         selectedOption: options ? options[0][choice] : "No options available",
@@ -86,57 +85,63 @@ export const Vote = ({ params }: { params: { slug: string } }) => {
       await aptosClient().waitForTransaction(tx.hash);
 
       const body = {
-          autolink: `${params.slug}`,
-          transactionHash: tx.hash,
-          network: "Testnet",
-          voteId: voteId?.toString(),
+        autolink: `${params.slug}`,
+        transactionHash: tx.hash,
+        network: "Testnet",
+        voteId: voteId?.toString(),
       };
 
       const postResponse = await fetch("/api/vote", {
-          method: "POST", // Specify the request method
-          headers: {
-              "Content-Type": "application/json", // Set the Content-Type header
-          },
-          body: JSON.stringify(body), // Convert the data to a JSON string
+        method: "POST", // Specify the request method
+        headers: {
+          "Content-Type": "application/json", // Set the Content-Type header
+        },
+        body: JSON.stringify(body), // Convert the data to a JSON string
       });
 
       if (postResponse.ok) {
-          setMessage("✅\nYou may now close the window");
+        onCompleteSignIn(true);
+        setMessage("✅ You may now close the window");
       } else {
-          const json = await postResponse.json();
-          setMessage(`❌ You may now close the window`);
+        const json = await postResponse.json();
+        setMessage("");
+        onCompleteSignIn(false, json.error);
       }
     } catch (error) {
       console.error(error);
-      setMessage(`❌ You may now close the window`);
+      setMessage("");
+      onCompleteSignIn(false, "failed to vote");
     }
   }
-    // [!endregion sending-user-op]
-    useEffect(() => {
-        setCreatorAddr(account?.address ?? "No address available");
-    }, [account]);
-    
+  // [!endregion sending-user-op]
+  useEffect(() => {
+    setCreatorAddr(account?.address ?? "No address available");
+    connected && onWalletConnected();
+  }, [account?.address]);
 
   return (
     <>
       {!sending && (
-        <div className="flex flex-col items-start gap-4 p-4 text-gray-300">
-          <div className="flex flex-col items-center gap-2">
-            <span className="font-bold ">Address:</span>
-            <div className=" border border-gray-300 rounded-full p-2 px-4">{formatAddress(account?.address)}</div>
-          </div>
+        <div className="flex flex-col items-center p-4 text-gray-900 w-[350px]">
+          {account?.address && (
+            <div className="flex items-center justify-center gap-2">
+              <span className="font-bold text-xl">Voter Address:</span>
+              <div className="text-gray-700">{formatAddress(account?.address)}</div>
+            </div>
+          )}
 
-          <button
-            className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+          {!account?.address && <WalletSelector />}
+          <Button
+            className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-sm shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
             onClick={send}
           >
-            Vote {}
-          </button>
+            Vote
+          </Button>
         </div>
       )}
       {sending && (
         <>
-          <h2 className="text-white">{message}</h2>
+          <h2 className="text-black mt-3">{message}</h2>
         </>
       )}
     </>

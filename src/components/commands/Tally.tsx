@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { aptosClient } from "@/utils/aptosClient";
 import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
-import { finished } from "stream";
 
 // Types
 type Scores = [string[], number[]];
@@ -54,13 +53,13 @@ const VotingOptions: React.FC<{ winner: string[]; currentScores: Scores | null }
   <div className="space-y-2">
     {currentScores
       ? currentScores[0].map((option, index) => (
-          <div key={index} className="bg-gray-100 p-3 rounded-md text-gray-800 flex justify-between">
+          <div key={index} className="bg-indigo-100 p-3 text-gray-800 flex justify-between">
             <span>{option}</span>
             <span className="font-bold">{currentScores[1][index]} votes</span>
           </div>
         ))
       : winner.map((option, index) => (
-          <div key={index} className="bg-gray-100 p-3 rounded-md text-gray-800">
+          <div key={index} className="bg-indigo-100 p-3 text-gray-800">
             {option}
           </div>
         ))}
@@ -93,8 +92,6 @@ export const Tally: React.FC<{ params: { slug: string } }> = ({ params }) => {
       if (scores && scores[0].length > 0) {
         setIsInitialized(true);
         setCurrentScores(scores);
-        const winnerResult = await checkWinner(creatorAddr);
-        if (winnerResult) setWinner(winnerResult);
       }
     } catch (error) {
       console.error("Failed to check initialization:", error);
@@ -144,39 +141,48 @@ export const Tally: React.FC<{ params: { slug: string } }> = ({ params }) => {
       if (postResponse.ok) {
         setMessage("✅ Winner declared successfully! You may now close the window.");
         toast({ title: "Success", description: "Winner declared successfully!" });
+        const winnerResult = await checkWinner(creatorAddr); // Fetch winner after declaring
+        setWinner(winnerResult);
       } else {
-        
         setMessage(`❌ You may now close the window`);
       }
     } catch (error) {
       console.error("Error declaring winner:", error);
       setMessage(`❌ You may now close the window`);
-      
     } finally {
       setSending(false);
     }
   };
 
   useEffect(() => {
-    setCreatorAddr(account?.address ?? "");
+    if (account) {
+      setCreatorAddr(account.address);
+    }
   }, [account]);
 
+  // Check initialization when creatorAddr changes
   useEffect(() => {
-    const initializeComponent = async () => {
-      await checkInitialization();
-      const winnerResult = await checkWinner(creatorAddr);
-      setWinner(winnerResult);
+    checkInitialization();
+  }, [checkInitialization, creatorAddr]);
+
+  // Check for winner only when creatorAddr is initialized
+  useEffect(() => {
+    const fetchWinner = async () => {
+      if (isInitialized && creatorAddr) {
+        const winnerResult = await checkWinner(creatorAddr);
+        setWinner(winnerResult);
+      }
     };
 
-    initializeComponent();
-  }, [checkInitialization, creatorAddr, message, handleDeclareWinner]);
+    fetchWinner();
+  }, [isInitialized, creatorAddr]);
 
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden max-w-md mx-auto w-[350px]">
+    <div className="max-w-md mx-auto w-[400px]">
       <img
-        src="https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"
+        src={winner.length > 0 ? "/winner.png" : "https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"}
         alt="Voting Concept"
-        className="w-full h-auto object-cover"
+        className="w-full h-[150px] object-contain"
       />
 
       <div className="p-6 flex flex-col justify-between">
@@ -187,7 +193,7 @@ export const Tally: React.FC<{ params: { slug: string } }> = ({ params }) => {
         {!sending && (
           <>
             {!currentScores && winner.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <Label className="text-lg font-semibold text-gray-700">Winner:</Label>
                 <p className="mt-1 text-gray-800 text-base">{winner.join(", ")}</p>
               </div>
@@ -200,15 +206,13 @@ export const Tally: React.FC<{ params: { slug: string } }> = ({ params }) => {
               <VotingOptions winner={winner} currentScores={currentScores} />
             </div>
 
-            <div className="mt-4">
+            <div className="mt-3 flex space-x-2 items-center justify-center">
               <Label className="text-sm font-semibold text-gray-700">Creator Address:</Label>
-              <div className="text-gray-800 border border-gray-300 rounded-full p-2 px-4 mt-1">
-                {formatAddress(creatorAddr)}
-              </div>
+              <div className="text-gray-800">{formatAddress(creatorAddr)}</div>
             </div>
 
             <Button
-              className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+              className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
               onClick={handleDeclareWinner}
               disabled={sending || !isInitialized}
             >
