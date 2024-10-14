@@ -3,7 +3,7 @@
 APAY is a Discord bot designed to facilitate on-chain payments and interactions on the Aptos blockchain. Users can easily connect their wallets and perform transactions using simple Discord commands. Whether it's sending APT, accessing a faucet, or participating in community votes, APAY streamlines the process on Aptos.
 
 
-## Table of Contents![Uploading Aptos_mark_BLK.svg…]()
+## Table of Contents!
 
 - [Features](#features)
 - [Commands](#commands)
