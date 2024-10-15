@@ -23,8 +23,6 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { NETWORKS } from "./network.js";
-import { ethers } from "ethers";
-import { abi } from "./abi.js";
 import { AptosConfig, Aptos } from "@aptos-labs/ts-sdk";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
@@ -73,14 +71,18 @@ sendLinkChangeStream.on("change", async (change) => {
     }
 
     await sender.send(
-      `You sent ${sendLink.amount} APTOS to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
+      `You sent ${sendLink.amount} APT to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
     );
   }
 });
 
 client.login(process.env.VITE_DISCORD_TOKEN);
 
-app.use(express.json({ verify: VerifyDiscordRequest(process.env.VITE_PUBLIC_KEY) }));
+app.use(
+  express.json({
+    verify: VerifyDiscordRequest(process.env.VITE_PUBLIC_KEY),
+  }),
+);
 
 mongoose
   .connect(process.env.VITE_DATABASE_URL)
@@ -108,7 +110,6 @@ app.post("/interactions", async (req, res) => {
     const userId = member?.user?.id || user?.id;
 
     if (name === "test") {
-      console.log("dance dance");
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -117,7 +118,7 @@ app.post("/interactions", async (req, res) => {
         },
       });
     }
-
+ 
     if (name === "check") {
       let userLink = await userlink.findOne({ user: userId }).sort({ generateTIME: -1 });
 
@@ -402,7 +403,6 @@ app.post("/interactions", async (req, res) => {
         // voteId: { $ne: null },
         finished: { $ne: true },
       });
-      
 
       const options = [];
       for (let i = 0; i < validVoteLists.length; i++) {
@@ -435,7 +435,7 @@ app.post("/interactions", async (req, res) => {
           flags: 64,
         },
       });
-    }  
+    }
 
     if (name === "tally") {
       const validVoteLists = await createlink.find({
@@ -626,7 +626,7 @@ app.post("/interactions", async (req, res) => {
   if (type === InteractionType.MESSAGE_COMPONENT) {
     const { name, options, custom_id } = data;
     // custom_id set in payload when sending message component
-    const userId = member?.user?.id || user?.id;
+    const userId = user?.id || member?.user?.id;
 
     if (custom_id === "Testnet") {
       return await sendFaucetToken(res, userId, "testnet");
@@ -634,9 +634,13 @@ app.post("/interactions", async (req, res) => {
     if (custom_id === "vote_list") {
       // Get selected option from payload
       const selectedOption = data.values[0];
+
       const voteId = selectedOption.replace("votelist_", "");
 
+      console.log(voteId);
+
       const vote = await createlink.findById(voteId);
+
       const options = [];
       for (let i = 0; i < vote.option.length; i++) {
         options.push({
@@ -747,7 +751,7 @@ app.post("/interactions", async (req, res) => {
       const onchainVoteId = voteId;
       const VOTING_MODULE_ADDRESS = "0x050f57325ca7db645579a690faddd09558abce46ad70faceb0b9c69f6a2066f7";
       const address = await getAddressFromUserId(userId);
-      console.log(address)
+      console.log(address);
 
       const aptosConfig = new AptosConfig({ network: "testnet" });
       const aptos = new Aptos(aptosConfig);

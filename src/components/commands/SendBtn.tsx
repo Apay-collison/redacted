@@ -73,11 +73,11 @@ export default function SendBtn({ params }: { params: { slug: string } }) {
 
   return (
     <>
-      {!hash && <WalletSelector />}
+      {!connected && <WalletSelector />}
 
       {connected && !hash && (
         <button
-          className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+          className="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-10 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
           disabled={isPending}
           onClick={submit}
         >
@@ -86,7 +86,8 @@ export default function SendBtn({ params }: { params: { slug: string } }) {
       )}
       {hash && (
         <>
-          <h2 className="text-white">{message}</h2>
+          <h2 className="text-black text-xl">Transaction successful</h2>
+          <h2 className="text-black">{message}</h2>
         </>
       )}
     </>

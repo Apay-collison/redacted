@@ -152,14 +152,14 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
       await aptosClient().waitForTransaction(tx.hash);
 
       // You can add additional logic here after successful transaction
+      toast({
+        variant: "default",
+        title: "Create Success!",
+        description: "You've successfully started a voting session",
+      });
     } catch (error: any) {
       console.error(error);
       setMessage(`❌ An error occurred: ${error.message}`);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to create vote",
-      });
     } finally {
       setSending(false);
     }
@@ -176,7 +176,11 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
 
   return (
     <div className="overflow-y-auto max-w-lg mx-auto w-[400px]">
-      <img src={currentScores ? "/go.gif" : "https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"} alt="Voting Concept" className="w-full h-[150px] object-cover" />
+      <img
+        src={currentScores ? "/go.gif" : "https://waveedfund.org/wp-content/uploads/2023/03/standard-vote.jpg"}
+        alt="Voting Concept"
+        className="w-full h-[150px] object-cover"
+      />
 
       <div className="p-6 flex flex-col justify-between">
         <div>

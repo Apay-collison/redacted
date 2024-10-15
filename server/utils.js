@@ -12,10 +12,12 @@ export function VerifyDiscordRequest(clientKey) {
     const timestamp = req.get("X-Signature-Timestamp");
 
     const isValidRequest = verifyKey(buf, signature, timestamp, clientKey);
+
     if (!isValidRequest) {
       res.status(401).send("Bad request signature");
-      throw new Error("Bad request signature");
+      return false;
     }
+    return true;
   };
 }
 
@@ -76,7 +78,7 @@ export async function sendFaucetToken(res, userId, network) {
   }
 
   const recipientAddress = userLink.address;
-  const amountToSend = "1000000000000000"; 
+  const amountToSend = "1000000000000000";
 
   // Load wallet from private key in .env
   const provider = new ethers.JsonRpcProvider(NETWORKS[network].url);

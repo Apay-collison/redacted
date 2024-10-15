@@ -1,8 +1,7 @@
 "use client";
 
-import ConnectBtn from "@/components/commands/ConnectBtn";
 import { CreateVote } from "@/components/commands/CreateVote";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Page({ params }: { params: { slug: string } }) {
   useEffect(() => {
