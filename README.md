@@ -78,7 +78,7 @@ Wallet authentication is handled through an embedded frontend framework. We use 
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/apay.git
+   git clone https://github.com/Apay-collison/redacted.git
    ```
 
 ## Usage
