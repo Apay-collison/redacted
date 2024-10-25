@@ -4,7 +4,7 @@ import ConnectBtn from "@/components/commands/ConnectBtn";
 import { useEffect, useState } from "react";
 
 export default function Page({ params }: { params: { slug: string } }) {
-  const [message, setMessage] = useState("Welcome to Apay, connect wallet to begin");
+  const [message, setMessage] = useState("Welcome to NEARby, connect wallet to begin");
   const [signature, setSignature] = useState(false);
 
   useEffect(() => {
@@ -12,8 +12,9 @@ export default function Page({ params }: { params: { slug: string } }) {
   }, []);
 
   const handleConnectWallet = () => {
-    setMessage("Processing..");
+    setMessage("Processing.."); 
   };
+     
   const handleWalletConnected = () => {
     setMessage("One more step, complete sign to zoom in!");
   };

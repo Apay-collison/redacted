@@ -1,33 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { VOTING_MODULE_ADDRESS } from "@/constants";
-import { aptosClient } from "@/utils/aptosClient";
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
-import { WalletSelector } from "../WalletSelector";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+import { Wallet, NearContext } from "@/wallets/near";
 
-// Helper functions
-const createTransactionPayload = (functionName: string, args: any[]): InputTransactionData => ({
-  data: {
-    function: `${VOTING_MODULE_ADDRESS}::Voting::${functionName}`,
-    functionArguments: args,
-  },
-});
+const CONTRACT_ID = process.env.NEXT_PUBLIC_VOTING_CONTRACT_ID || "";
 
 type Scores = [string[], number[]];
 
-const fetchScores = async (account: string): Promise<Scores | null> => {
+const fetchScores = async (wallet: Wallet, account: string): Promise<Scores | null> => {
   if (!account) return null;
   try {
-    const result = await aptosClient().view<Scores>({
-      payload: {
-        function: `${VOTING_MODULE_ADDRESS}::Voting::view_current_scores`,
-        functionArguments: [account],
-      },
+    const result = await wallet.viewMethod({
+      contractId: CONTRACT_ID,
+      method: 'view_current_scores',
+      args: { account_id: account }
     });
-    return result ? [result[0], result[1].map(Number)] : null;
+    return result ? [result.options, result.votes.map(Number)] : null;
   } catch (error) {
     console.error("Failed to fetch scores:", error);
     return null;
@@ -43,21 +32,38 @@ export const Vote = ({
   onWalletConnected: () => void;
   onCompleteSignIn: (isSuccess: boolean, errorMsg?: string) => void;
 }) => {
-  const { account, signAndSubmitTransaction, connected } = useWallet();
+  const [wallet] = useState(() => new Wallet({ networkId: 'testnet', createAccessKeyFor: CONTRACT_ID }));
+  const [signedAccountId, setSignedAccountId] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [creatorAddr, setCreatorAddr] = useState<string>("");
 
-  function formatAddress(address: any) {
+  // Initialize wallet
+  useEffect(() => {
+    wallet.startUp((accountId: React.SetStateAction<string>) => {
+      setSignedAccountId(accountId);
+      if (accountId) {
+        setCreatorAddr(accountId);
+        onWalletConnected();
+      }
+    });
+  }, [wallet, onWalletConnected]);
+
+  const formatAddress = (address: string): string => {
     if (!address || address.length < 10) {
-      return address;
+      return address;  
     }
     const firstPart = address.slice(0, 4);
     const lastPart = address.slice(-6);
     return `${firstPart}...${lastPart}`;
-  }
+  };
 
-  async function send() {
+  const send = async () => {
+    if (!signedAccountId) {
+      onCompleteSignIn(false, "Please connect your wallet first");
+      return;
+    }
+
     setSending(true);
     setMessage("Loading...");
 
@@ -69,7 +75,7 @@ export const Vote = ({
       const choice = JSON.parse(json).choice;
       const voteId = JSON.parse(json).voteId;
 
-      const options = await fetchScores(creatorAddr);
+      const options = await fetchScores(wallet, creatorAddr);
       const selectedOption = options && options[0][choice];
 
       console.log("Voting Information:", {
@@ -79,24 +85,31 @@ export const Vote = ({
         scores: options ? options[1] : "No scores available",
       });
 
-      const paddedOptions = [selectedOption, creatorAddr, "", ""].slice(0, 2);
-      const payload = createTransactionPayload("vote", paddedOptions);
-      const tx = await signAndSubmitTransaction(payload);
-      await aptosClient().waitForTransaction(tx.hash);
+      // Call the NEAR contract to vote
+      const result = await wallet.callMethod({
+        contractId: CONTRACT_ID,
+        method: 'vote',
+        args: {
+          option: selectedOption,
+          creator_account_id: creatorAddr
+        },
+        gas: '100000',
+        deposit: ''
+      });
 
       const body = {
-        autolink: `${params.slug}`,
-        transactionHash: tx.hash,
-        network: "Testnet",
+        autolink: params.slug,
+        transactionHash: result,
+        network: "testnet",
         voteId: voteId?.toString(),
       };
 
       const postResponse = await fetch("/api/vote", {
-        method: "POST", // Specify the request method
+        method: "POST",
         headers: {
-          "Content-Type": "application/json", // Set the Content-Type header
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body), // Convert the data to a JSON string
+        body: JSON.stringify(body),
       });
 
       if (postResponse.ok) {
@@ -111,39 +124,47 @@ export const Vote = ({
       console.error(error);
       setMessage("");
       onCompleteSignIn(false, "failed to vote");
+    } finally {
+      setSending(false);
     }
-  }
-  // [!endregion sending-user-op]
-  useEffect(() => {
-    setCreatorAddr(account?.address ?? "No address available");
-    connected && onWalletConnected();
-  }, [account?.address]);
+  };
 
   return (
-    <>
+    <NearContext.Provider value={{ wallet, signedAccountId }}>
       {!sending && (
         <div className="flex flex-col items-center p-4 text-gray-900 w-[350px]">
-          {account?.address && (
+          {signedAccountId && (
             <div className="flex items-center justify-center gap-2">
               <span className="font-bold text-xl">Voter Address:</span>
-              <div className="text-gray-700">{formatAddress(account?.address)}</div>
+              <div className="text-gray-700">{formatAddress(signedAccountId)}</div>
             </div>
           )}
 
-          {!account?.address && <WalletSelector />}
-          <Button
-            className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-sm shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
-            onClick={send}
-          >
-            Vote
-          </Button>
+          {!signedAccountId && (
+            <Button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={() => wallet.signIn()}
+            >
+              Connect NEAR Wallet
+            </Button>
+          )}
+
+          {signedAccountId && (
+            <Button
+              className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-sm shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+              onClick={send}
+            >
+              Vote
+            </Button>
+          )}
         </div>
       )}
+      
       {sending && (
-        <>
+        <div className="text-center">
           <h2 className="text-black mt-3">{message}</h2>
-        </>
+        </div>
       )}
-    </>
+    </NearContext.Provider>
   );
 };

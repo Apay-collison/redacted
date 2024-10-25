@@ -1,7 +1,5 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { WalletSelector } from "../WalletSelector";
+import { useEffect, useState, useContext } from 'react';
+import { NearContext } from '@/wallets/near';
 
 export default function ConnectBtn({
   params,
@@ -14,22 +12,32 @@ export default function ConnectBtn({
   onWalletConnected: () => void;
   onCompleteSignIn: (isSuccess: boolean, errorMsg?: string) => void;
 }) {
-  const { account, connected, signMessageAndVerify } = useWallet();
+  const { wallet, signedAccountId } = useContext(NearContext);
   const [signature, setSignature] = useState(false);
+  const isConnected = !!signedAccountId;
+
+  const handleSignIn = () => {
+    if (wallet) {
+      wallet.signIn();
+    }
+  };
 
   async function sign() {
+    if (!wallet || !signedAccountId) return;
+    
     onConnectWallet();
     const message = `session ID: ${params.slug}`;
 
     try {
-      const data = await signMessageAndVerify({ message, nonce: "" });
-
+      // For NEAR, we'll use the account ID as verification instead of a signature
+      // since NEAR doesn't have a direct message signing equivalent
       const body = {
         message: message,
-        signature: data,
+        signature: signedAccountId, // Using account ID as verification
         autolink: `${params.slug}`,
-        address: account?.address,
+        address: signedAccountId,
       };
+
       const response = await fetch("/api/connect", {
         method: "POST",
         headers: {
@@ -40,25 +48,34 @@ export default function ConnectBtn({
 
       if (response.ok) {
         onCompleteSignIn(true);
-        setSignature(data);
+        setSignature(true);
       } else {
         const json = await response.json();
         onCompleteSignIn(false, json.error);
       }
     } catch (error) {
-      onCompleteSignIn(false, "failed to sign in");
+      onCompleteSignIn(false, "Failed to sign in");
     }
   }
 
   useEffect(() => {
-    connected && onWalletConnected();
-  }, [account?.address]);
+    if (isConnected) {
+      onWalletConnected();
+    }
+  }, [signedAccountId]);
 
   return (
     <>
       <div className="flex space-x-3">
-        {!signature && !connected && <WalletSelector />}
-        {connected && !signature && (
+        {!signature && !isConnected && (
+          <button
+            onClick={handleSignIn}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+          >
+            Connect NEAR Wallet
+          </button>
+        )}
+        {isConnected && !signature && (
           <button
             className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
             onClick={sign}
@@ -69,7 +86,9 @@ export default function ConnectBtn({
       </div>
 
       {signature && (
-        <h2 className="text-black">{signature ? "✅ You may now close the window" : "Waiting for signature..."}</h2>
+        <h2 className="text-black">
+          {signature ? "✅ You may now close the window" : "Waiting for signature..."}
+        </h2>
       )}
     </>
   );

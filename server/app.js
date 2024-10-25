@@ -23,8 +23,7 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { NETWORKS } from "./network.js";
-import { AptosConfig, Aptos } from "@aptos-labs/ts-sdk";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { Wallet } from "../src/wallets/near.js";
 
 const app = express();
 const PORT = process.env.VITE_PORT || 3001;
@@ -66,12 +65,12 @@ sendLinkChangeStream.on("change", async (change) => {
     if (userLink !== null) {
       const receiver = await client.users.fetch(userLink.user);
       await receiver.send(
-        `You received ${sendLink.amount} APTOS!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
+        `You received ${sendLink.amount} NEAR!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
       );
     }
 
     await sender.send(
-      `You sent ${sendLink.amount} APT to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
+      `You sent ${sendLink.amount} NEAR to ${sendLink.to_address}!\nCheck the transaction at [Explorer](${explorerLink}) 🔎`,
     );
   }
 });
@@ -152,10 +151,10 @@ app.post("/interactions", async (req, res) => {
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          // content: `Sent 0.001 APTOS to `,
+          // content: `Sent 0.001 NEAR to `,
           components: [
             new ActionRowBuilder().addComponents(
-              new ButtonBuilder().setCustomId("Testnet").setLabel("APTOS Testnet").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId("Testnet").setLabel("NEAR Testnet").setStyle(ButtonStyle.Primary),
             ),
           ],
           flags: 64,
@@ -600,7 +599,7 @@ app.post("/interactions", async (req, res) => {
         const response = {
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
-            content: `${amount} APTOS to ${recipientAddress}`,
+            content: `${amount} NEAR to ${recipientAddress}`,
             components: [
               new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
@@ -749,29 +748,32 @@ app.post("/interactions", async (req, res) => {
       const voteId = selectedOption.replace("resultlist_", "");
       const vote = await createlink.findById(voteId);
       const onchainVoteId = voteId;
-      const VOTING_MODULE_ADDRESS = "0x050f57325ca7db645579a690faddd09558abce46ad70faceb0b9c69f6a2066f7";
-      const address = await getAddressFromUserId(userId);
-      console.log(address);
-
-      const aptosConfig = new AptosConfig({ network: "testnet" });
-      const aptos = new Aptos(aptosConfig);
-
-      const payload = {
-        function: `${VOTING_MODULE_ADDRESS}::Voting::view_winner`,
-        functionArguments: [address],
-      };
-
-      const chainId = await aptos.view({ payload });
-
+      
+      // Initialize NEAR wallet
+      const wallet = new Wallet({
+        networkId: 'testnet',
+        createAccessKeyFor: vote.contractId 
+      });
+  
+      const accountId = await getAccountFromUserId(userId);
+      console.log(accountId);
+  
+      // View the winner using NEAR wallet
+      const result = await wallet.viewMethod({
+        contractId: vote.contractId,
+        method: 'get_vote_winner',
+        args: { vote_id: onchainVoteId }
+      });
+  
       // Send results
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `The winner of the vote: ${chainId}`,
+          content: `The winner of the vote: ${result}`,
           flags: 64,
         },
       });
-    }
+  }
   }
 });
 

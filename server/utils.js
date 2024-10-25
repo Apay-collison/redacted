@@ -91,7 +91,7 @@ export async function sendFaucetToken(res, userId, network) {
     return res.send({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: `Sent 0.001 APTOS to ${recipientAddress}.`,
+        content: `Sent 0.001 NEAR to ${recipientAddress}.`,
         components: [
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -108,7 +108,7 @@ export async function sendFaucetToken(res, userId, network) {
     return res.send({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: `Failed to send APTOS. Error: ${error.message}`,
+        content: `Failed to send NEAR. Error: ${error.message}`,
       },
     });
   }

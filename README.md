@@ -1,6 +1,6 @@
-# APAY
+# NEARby Finance
 
-APAY is a Discord bot designed to facilitate on-chain payments and interactions on the Aptos blockchain. Users can easily connect their wallets and perform transactions using simple Discord commands. Whether it's sending APT, accessing a faucet, or participating in community votes, APAY streamlines the process on Aptos.
+NEARby is a Discord bot designed to facilitate on-chain payments and interactions on the Near blockchain. Users can easily connect their wallets and perform transactions using simple Discord commands. Whether it's sending NEAR, accessing a faucet, or participating in community votes, NEARby streamlines the process on Near.
 
 
 ## Table of Contents!
@@ -17,28 +17,28 @@ APAY is a Discord bot designed to facilitate on-chain payments and interactions 
 ## Features
 
 - Seamless wallet connection and management
-- Easy APT transfers between users
+- Easy NEAR transfers between users
 - Faucet access for testnet tokens
 - Community voting system
 - Transaction notifications
-- Multi-network support (Aptos Mainnet, Testnet, Devnet)
+- Multi-network support (Near Mainnet, Testnet, Devnet)
 
 ## Commands
 
 ### `/connect`
-Connect your Aptos wallet to the bot. Your address will be saved for future use.
+Connect your Near wallet to the bot. Your address will be saved for future use.
 
 ### `/check`
-View the Aptos address currently connected to your Discord account.
+View the Near address currently connected to your Discord account.
 
 ### `/send`
-Send APT to another user or address.
+Send NEAR to another user or address.
 - Inputs:
-  - `amount`: string (e.g., "0.1" for 0.1 APT)
-  - `to_address`: string (Aptos address or Discord user tag)
+  - `amount`: string (e.g., "0.1" for 0.1 NEAR)
+  - `to_address`: string (Near address or Discord user tag)
 
 ### `/faucet`
-Receive testnet APT to your connected wallet.
+Receive testnet NEAR to your connected wallet.
 - Options: Testnet, Devnet
 
 ### `/createVote`
@@ -63,16 +63,16 @@ View the results of a finished voting session.
 
 ## Authentication
 
-Wallet authentication is handled through an embedded frontend framework. We use the Petra Wallet for Aptos blockchain interactions.
+Wallet authentication is handled through an embedded frontend framework. We use the Petra Wallet for Near blockchain interactions.
 
 ## How it's Made
 
-1. **Aptos SDK**: Provides the core functionality for interacting with the Aptos blockchain.
+1. **Near SDK**: Provides the core functionality for interacting with the Near blockchain.
 2. **Petra Wallet**: Enables seamless wallet connections and transaction signing.
-3. **Move Language**: Used for developing smart contracts on the Aptos blockchain.
+3. **Move Language**: Used for developing smart contracts on the Near blockchain.
 4. **Discord.py**: Powers the Discord bot interface.
-5. **MongoDB**: Manages user data and connects the Discord bot with the APAY website.
-6. **Aptos Explorer**: Offers transaction visibility and supports multiple Aptos networks.
+5. **MongoDB**: Manages user data and connects the Discord bot with the NEARby website.
+6. **Near Explorer**: Offers transaction visibility and supports multiple Near networks.
 
 ## Installation
 

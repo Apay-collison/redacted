@@ -2,13 +2,15 @@ import "dotenv/config";
 
 export const NETWORKS = {
   mainnet: {
-    name: "Mainnet",
-    url: `https://api.mainnet.aptoslabs.com/v1`,
-    explorer: "https://explorer.aptoslabs.com",
+    chainId: 397,
+    name: "Near Mainnet",
+    explorer: "https://eth-explorer.near.org",
+    rpc: "https://eth-rpc.mainnet.near.org",
   },
   testnet: {
-    name: "Testnet",
-    url: `https://api.testnet.aptoslabs.com/v1`,
-    explorer: "https://explorer.aptoslabs.com",
+    chainId: 398,
+    name: "Near Testnet",
+    explorer: "https://eth-explorer-testnet.near.org",
+    rpc: "https://eth-rpc.testnet.near.org",
   },
 };

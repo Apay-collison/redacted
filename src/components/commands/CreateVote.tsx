@@ -1,11 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import React, { useState, useCallback, useEffect, useContext } from "react";
 import { toast } from "@/components/ui/use-toast";
-import { VOTING_MODULE_ADDRESS } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { aptosClient } from "@/utils/aptosClient";
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-react";
+import { NearContext } from '@/wallets/near';
 
 // Types
 interface VotingOption {
@@ -15,42 +12,16 @@ interface VotingOption {
 
 type Scores = [string[], number[]];
 
-// Helper functions
-const createTransactionPayload = (functionName: string, args: any[]): InputTransactionData => ({
-  data: {
-    function: `${VOTING_MODULE_ADDRESS}::Voting::${functionName}`,
-    functionArguments: args,
-  },
-});
-
-const fetchScores = async (account: { address: string } | null): Promise<Scores | null> => {
-  if (!account) return null;
+// Helper function to view contract data
+const viewContractState = async (wallet: any, contractId: string, method: string, args: any = {}) => {
   try {
-    const result = await aptosClient().view<Scores>({
-      payload: {
-        function: `${VOTING_MODULE_ADDRESS}::Voting::view_current_scores`,
-        functionArguments: [account.address],
-      },
+    return await wallet.viewMethod({
+      contractId,
+      method,
+      args,
     });
-    return result ? [result[0], result[1].map(Number)] : null;
   } catch (error) {
-    console.error("Failed to fetch scores:", error);
-    return null;
-  }
-};
-
-const checkWinner = async (account: { address: string } | null): Promise<string[] | null> => {
-  if (!account) return null;
-  try {
-    const result = await aptosClient().view<[string]>({
-      payload: {
-        function: `${VOTING_MODULE_ADDRESS}::Voting::view_winner`,
-        functionArguments: [account.address],
-      },
-    });
-    return result;
-  } catch (error) {
-    console.error("Failed to check winner:", error);
+    console.error(`Failed to view ${method}:`, error);
     return null;
   }
 };
@@ -84,7 +55,7 @@ interface CreateVoteProps {
 }
 
 export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
-  const { account, signAndSubmitTransaction } = useWallet();
+  const { wallet, signedAccountId } = useContext(NearContext);
   const [sending, setSending] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [topic, setTopic] = useState<string>("");
@@ -92,6 +63,8 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [winner, setWinner] = useState<string[] | null>(null);
   const [currentScores, setCurrentScores] = useState<Scores | null>(null);
+
+  const CONTRACT_ID = process.env.NEXT_PUBLIC_NEAR_VOTING_CONTRACT_ID || '';
 
   const fetchVotingOptions = useCallback(async () => {
     try {
@@ -106,22 +79,23 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
   }, [params.slug]);
 
   const checkInitialization = useCallback(async () => {
-    if (!account) return;
+    if (!wallet || !signedAccountId) return;
+
     try {
-      const scores = await fetchScores(account);
+      const scores = await viewContractState(wallet, CONTRACT_ID, 'view_current_scores', { account_id: signedAccountId });
       if (scores && scores[0].length > 0) {
         setIsInitialized(true);
         setCurrentScores(scores);
-        const winnerResult = await checkWinner(account);
+        const winnerResult = await viewContractState(wallet, CONTRACT_ID, 'view_winner', { account_id: signedAccountId });
         if (winnerResult) setWinner(winnerResult);
       }
     } catch (error) {
       console.error("Failed to check initialization:", error);
     }
-  }, [account]);
+  }, [wallet, signedAccountId]);
 
   const handleCreateVote = useCallback(async () => {
-    if (!account) {
+    if (!wallet || !signedAccountId) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -147,23 +121,34 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
     try {
       await fetchVotingOptions();
       const paddedOptions = [...options, "", ""].slice(0, 3);
-      const payload = createTransactionPayload("initialize_with_options", paddedOptions);
-      const tx = await signAndSubmitTransaction(payload);
-      await aptosClient().waitForTransaction(tx.hash);
+      
+      // Call the NEAR contract method
+      const result = await wallet.callMethod({
+        contractId: CONTRACT_ID,
+        method: 'initialize_with_options',
+        args: { options: paddedOptions }
+      });
 
-      // You can add additional logic here after successful transaction
       toast({
         variant: "default",
         title: "Create Success!",
         description: "You've successfully started a voting session",
       });
+
+      // Refresh the state after successful creation
+      await checkInitialization();
     } catch (error: any) {
       console.error(error);
       setMessage(`❌ An error occurred: ${error.message}`);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
     } finally {
       setSending(false);
     }
-  }, [account, options, params.slug, signAndSubmitTransaction, fetchVotingOptions]);
+  }, [wallet, signedAccountId, options, params.slug, fetchVotingOptions, checkInitialization]);
 
   useEffect(() => {
     const initializeComponent = async () => {
@@ -172,7 +157,7 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
     };
 
     initializeComponent();
-  }, [fetchVotingOptions, checkInitialization, handleCreateVote]);
+  }, [fetchVotingOptions, checkInitialization]);
 
   return (
     <div className="overflow-y-auto max-w-lg mx-auto w-[400px]">
@@ -193,7 +178,7 @@ export const CreateVote: React.FC<CreateVoteProps> = ({ params }) => {
               {!currentScores && (
                 <div className="mb-3 flex items-center justify-center space-x-1">
                   <Label className="text-lg font-semibold text-gray-700">Topic:</Label>
-                  <p className=" text-gray-800 text-base">{topic}</p>
+                  <p className="text-gray-800 text-base">{topic}</p>
                 </div>
               )}
 
