@@ -69,7 +69,7 @@ Wallet authentication is handled through an embedded frontend framework. We use 
 
 1. **Near SDK**: Provides the core functionality for interacting with the Near blockchain.
 2. **Petra Wallet**: Enables seamless wallet connections and transaction signing.
-3. **Move Language**: Used for developing smart contracts on the Near blockchain.
+3. **Near Language**: Used for developing smart contracts on the Near blockchain.
 4. **Discord.py**: Powers the Discord bot interface.
 5. **MongoDB**: Manages user data and connects the Discord bot with the NEARby website.
 6. **Near Explorer**: Offers transaction visibility and supports multiple Near networks.
