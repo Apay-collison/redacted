@@ -1,11 +1,14 @@
-'use client'
+"use client";
 
 import { ReactQueryProvider } from "@/components/ReactQueryProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { NetworkId } from "@/config";
 import { useState, useEffect } from "react";
 import { NearContext, Wallet } from "@/wallets/near";
-
+import { wagmiConfig } from "../wagmi";
+import { WagmiProvider } from "wagmi";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 // export const metadata = {
@@ -26,11 +29,15 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <NearContext.Provider value={{ wallet, signedAccountId }}>
-          <ReactQueryProvider>
-            <div id="root">{children}</div>
-           
-            <Toaster />
-          </ReactQueryProvider>
+          <WagmiProvider config={wagmiConfig}>
+            <RainbowKitProvider>
+              <ReactQueryProvider>
+                <div id="root">{children}</div>
+
+                <Toaster />
+              </ReactQueryProvider>
+            </RainbowKitProvider>
+          </WagmiProvider>
         </NearContext.Provider>
       </body>
     </html>
