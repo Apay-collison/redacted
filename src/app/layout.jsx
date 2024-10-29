@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactQueryProvider } from "@/components/ReactQueryProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { NetworkId } from "@/config";
 import { useState, useEffect } from "react";
@@ -19,6 +20,8 @@ import "./globals.css";
 export default function RootLayout({ children }) {
   const wallet = new Wallet({ networkId: NetworkId });
 
+  const queryClient = new QueryClient();
+
   const [signedAccountId, setSignedAccountId] = useState("");
 
   useEffect(() => {
@@ -30,13 +33,12 @@ export default function RootLayout({ children }) {
       <body>
         <NearContext.Provider value={{ wallet, signedAccountId }}>
           <WagmiProvider config={wagmiConfig}>
-            <RainbowKitProvider>
-              <ReactQueryProvider>
+            <QueryClientProvider client={queryClient}>
+              <RainbowKitProvider>
                 <div id="root">{children}</div>
-
                 <Toaster />
-              </ReactQueryProvider>
-            </RainbowKitProvider>
+              </RainbowKitProvider>
+            </QueryClientProvider>
           </WagmiProvider>
         </NearContext.Provider>
       </body>

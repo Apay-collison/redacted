@@ -8,9 +8,9 @@ import { http, createConfig } from 'wagmi';
 import { aurora, auroraTestnet } from './config';
 
 // Replace this with your actual environment variable import method for Vite
-const VITE_WC_PROJECT_ID = process.env.VITE_WC_PROJECT_ID;
+const NEXT_PUBLIC_WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID;
 
-const projectId = VITE_WC_PROJECT_ID;
+const projectId = NEXT_PUBLIC_WC_PROJECT_ID;
 
 if (!projectId) {
   const providerErrMessage =
